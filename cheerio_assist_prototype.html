@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cheerio Assist - Prototype</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f6f7fb;--card:#fff;--tx:#14192b;--mut:#667085;--bd:#e3e6ef;--pri:#5b3df5;--priT:#fff;--ok:#12805c;--bad:#c62a2f;--warn:#a15c00;--bub:#eef0fa}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1220;--card:#181c30;--tx:#eef0fa;--mut:#9aa3bd;--bd:#2a3050;--pri:#8b78ff;--priT:#0f1220;--ok:#4cd6a0;--bad:#ff7b80;--warn:#f5b042;--bub:#222845}}
+:root[data-theme="dark"]{--bg:#0f1220;--card:#181c30;--tx:#eef0fa;--mut:#9aa3bd;--bd:#2a3050;--pri:#8b78ff;--priT:#0f1220;--ok:#4cd6a0;--bad:#ff7b80;--warn:#f5b042;--bub:#222845}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 16px;border-bottom:1px solid var(--bd);background:var(--card)}
+.top b{margin-right:auto}.tab{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:6px 12px;border-radius:99px;cursor:pointer}
+.tab.on{background:var(--pri);color:var(--priT);border-color:var(--pri)}
+.wrap{display:grid;grid-template-columns:1fr 380px;gap:16px;padding:16px;max-width:1100px;margin:auto}
+@media(max-width:820px){.wrap{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px}
+h3{margin:0 0 10px;font-size:15px}.row{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--bd);flex-wrap:wrap}
+.row:first-of-type{border-top:0}.grow{flex:1;min-width:140px}.mut{color:var(--mut);font-size:12px}
+.pill{padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid currentColor}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+button.b{background:var(--pri);color:var(--priT);border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit;font-weight:600}
+button.g{background:transparent;color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit}
+.chat{display:flex;flex-direction:column;height:560px;max-height:75vh}
+.msgs{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:4px 0}
+.m{max-width:92%;padding:9px 12px;border-radius:12px;background:var(--bub)}.m.u{align-self:flex-end;background:var(--pri);color:var(--priT)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.diff{font:12px/1.5 ui-monospace,Menlo,monospace;border:1px solid var(--bd);border-radius:8px;padding:8px;margin-top:8px;background:var(--card)}
+.del{color:var(--bad);text-decoration:line-through}.add{color:var(--ok)}
+.tool{font-size:12px;color:var(--mut);border-left:3px solid var(--pri);padding-left:8px}
+.hand{border:1px dashed var(--bd);border-radius:8px;padding:8px;margin-top:8px;font-size:12px}
+.hint{font-size:12px;color:var(--mut);padding:8px 16px;max-width:1100px;margin:auto}
+</style></head><body>
+<div class="top"><b>Cheerio · Assist prototype</b>
+<button class="tab on" id="t1" onclick="sc(1)">Scenario 1: Template rejected</button>
+<button class="tab" id="t2" onclick="sc(2)">Scenario 2: Needs a human</button></div>
+<div class="hint" id="hint"></div>
+<div class="wrap">
+<div class="card"><h3 id="ptitle">Templates</h3><div id="panel"></div></div>
+<div class="card chat"><h3>Cheerio Assist <span class="mut">· read-only on your account</span></h3><div class="msgs" id="msgs"></div></div>
+</div>
+<script>
+var M=document.getElementById('msgs'),P=document.getElementById('panel'),H=document.getElementById('hint'),state={};
+function bot(h,acts,extra){var d=document.createElement('div');d.className='m';d.innerHTML=h+(extra||'');
+ if(acts){var a=document.createElement('div');a.className='acts';acts.forEach(function(x){var b=document.createElement('button');b.className=x[2]||'b';b.textContent=x[0];
+  b.onclick=function(){a.remove();x[1]()};a.appendChild(b)});d.appendChild(a)}
+ M.appendChild(d);M.scrollTop=M.scrollHeight}
+function me(t){var d=document.createElement('div');d.className='m u';d.textContent=t;M.appendChild(d);M.scrollTop=M.scrollHeight}
+function pill(t,c){return '<span class="pill '+c+'">'+t+'</span>'}
+function sc(n){M.innerHTML='';document.getElementById('t1').className='tab'+(n==1?' on':'');document.getElementById('t2').className='tab'+(n==2?' on':'');n==1?s1():s2()}
+/* Scenario 1 */
+function s1(){state.st='Rejected';H.textContent='Click "Fix with Assist" to follow the journey. Edge cases: cost warning, human approval before changes, and "not solved" handoff.';
+ tpl();bot('Hi! I\'m Assist. I can see your templates, WhatsApp number status and message logs (read-only). What do you need help with?')}
+function tpl(){document.getElementById('ptitle').textContent='Templates';
+ var s=state.st,c=s=='Rejected'?'bad':s=='Pending review'?'warn':'ok';
+ P.innerHTML='<div class="row"><div class="grow"><b>welcome_offer</b><div class="mut">Marketing · Approved</div></div>'+pill('Approved','ok')+'</div>'+
+ '<div class="row"><div class="grow"><b>order_update_v2</b><div class="mut">Utility · "Hi {{1}}, your order is shipped. Use code SAVE10 for 10% off your next order!"</div></div>'+pill(s,c)+
+ (s=='Rejected'?'<button class="b" onclick="ask()">Fix with Assist</button>':'')+'</div>'}
+function ask(){me('Why was order_update_v2 rejected?');
+ bot('<div class="tool">Checked: template status, Meta rejection reason (read-only)</div>Meta rejected it because the category is <b>Utility</b> but the text includes a discount offer, which counts as <b>Marketing</b>.',
+ [['Show me the fix',fix],['Talk to a human',function(){me('Talk to a human');hand('Template rejection')},'g']])}
+function fix(){me('Show me the fix');
+ bot('Two safe options:',[['Option A: make it Marketing',optA],['Option B: remove the offer, keep Utility',optB],['Edit it myself',function(){me('I\'ll edit it myself');bot('Okay. I\'ve opened the template editor. Come back anytime.')},'g']],
+ '<div class="diff">Hi {{1}}, your order is shipped.<br><span class="del"> Use code SAVE10 for 10% off your next order!</span><br><span class="add">+ Track it here: {{2}}</span></div>')}
+function optA(){me('Option A');conf('Switch to Marketing')}
+function optB(){me('Option B');conf('Keep Utility, remove offer')}
+function conf(t){bot('<b>Please confirm.</b> I\'ll edit the draft and resubmit to Meta: <i>'+t+'</i>.<div class="hand">Heads-up: Marketing messages are billed at a higher rate than Utility ones. Your wallet balance is ₹412.</div>',
+ [['Confirm & resubmit',done],['Cancel',function(){me('Cancel');bot('No changes made.')},'g']])}
+function done(){me('Confirm & resubmit');state.st='Pending review';tpl();
+ bot('Done. Resubmitted. Meta usually reviews within minutes to 24 hours. I\'ll notify you here and on email.<div class="mut" style="margin-top:6px">Did this solve your problem?</div>',
+ [['Yes, thanks',function(){me('Yes, thanks');bot('Great! Logged as resolved. If it\'s rejected again, I\'ll reopen automatically.')}],['No, still stuck',function(){me('No, still stuck');hand('Template resubmitted, user still stuck')},'g']])}
+/* Scenario 2 */
+function s2(){H.textContent='Edge case: Assist can\'t safely fix this (needs the customer\'s Shopify admin). It hands over to a human with full context so the user never repeats themselves.';
+ document.getElementById('ptitle').textContent='Integrations';
+ P.innerHTML='<div class="row"><div class="grow"><b>Shopify</b><div class="mut">Abandoned-cart webhook</div></div>'+pill('Not receiving events','bad')+'<button class="b" onclick="ask2()">Ask Assist</button></div>'+
+ '<div class="row"><div class="grow"><b>Google Sheets</b></div>'+pill('Connected','ok')+'</div>';
+ bot('Hi! I\'m Assist. What can I help with?')}
+function ask2(){me('My Shopify abandoned cart messages aren\'t sending');
+ bot('<div class="tool">Checked: webhook logs, last 24h (read-only)</div>No events from Shopify have arrived since 9 Oct. The webhook is likely missing or has lost permission in your Shopify admin. I can\'t change your Shopify settings, and I\'m only about 40% sure of the cause, so I\'m bringing in a teammate rather than guessing.',
+ [['Connect me to a teammate',function(){me('Connect me to a teammate');hand('Shopify webhook not receiving events')}],['Show me how to check myself',function(){me('Show me how to check myself');bot('In Shopify: Settings → Notifications → Webhooks. Look for a Cheerio URL. If it\'s missing, reconnect from Cheerio → Integrations. Still stuck? I\'ll get a teammate.',[['Get a teammate',function(){hand('Shopify webhook, self-check failed')}]])},'g']])}
+function hand(t){bot('Connecting you to Priya from Support. Expected reply: ~15 min (Mon-Sat, 9-9). You won\'t need to repeat anything.',null,
+ '<div class="hand"><b>What the agent sees</b><br>Issue: '+t+'<br>Account: Starter plan, WABA verified, wallet ₹412<br>Diagnostics: logs checked, no events since 9 Oct<br>Already tried: Assist steps, user feedback "not solved"<br>Suggested next step: re-authorise Shopify app</div>')}
+s1();
+</script></body></html>
